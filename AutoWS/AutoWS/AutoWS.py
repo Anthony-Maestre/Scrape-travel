@@ -11,16 +11,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 import PySimpleGUI as sg
 from datetime import datetime
-import certifi
 
 sg.popup_no_wait('Iniciando...', non_blocking = True, auto_close = True, button_type = 5)
-
-def get_database():
-    import pymongo
-    from pymongo import MongoClient
-    CONNECTION_STRING = 'mongodb://sa:Desarrollo.2015@20.36.200.166:27017'
-    client = MongoClient(CONNECTION_STRING)
-    return client['HomologacionHoteles']
 
 def pag_base():
     options = webdriver.ChromeOptions()
@@ -34,17 +26,14 @@ def pag_base():
     return driver
 
 def parametros():
-    if values:
-        print("Y")
-    else:
-        layout = [[sg.Text('El número máximo de pasajeros es: 6')],
-                    [sg.Text('Ciudad de origen'), sg.InputText(size= (20, )), sg.Text('Ciudad de destino'), sg.InputText(size= (20, ))],
-                   [sg.Text('Mes de Salida'), sg.InputText(size=(10, )), sg.Text('Dia'), sg.InputText(size= (2, )), sg.Text('Mes de Regreso'), sg.InputText(size= (10, )), sg.Text('Dia'), sg.InputText(size= (2, ))],
-                   [sg.Text('#Habitaciones(Max. 4)'), sg.InputText(size= (2, ))],
-                   [sg.Button('Ok'), sg.Button('Cancel')] ]
-        window = sg.Window('Buscar paquetes de viaje', layout)
-        event, values = window.read()
-        window.close()
+    layout = [[sg.Text('El número máximo de pasajeros es: 6')],
+                [sg.Text('Ciudad de origen'), sg.InputText(size= (20, )), sg.Text('Ciudad de destino'), sg.InputText(size= (20, ))],
+               [sg.Text('Mes de Salida'), sg.InputText(size=(10, )), sg.Text('Dia'), sg.InputText(size= (2, )), sg.Text('Mes de Regreso'), sg.InputText(size= (10, )), sg.Text('Dia'), sg.InputText(size= (2, ))],
+               [sg.Text('#Habitaciones(Max. 4)'), sg.InputText(size= (2, ))],
+               [sg.Button('Ok'), sg.Button('Cancel')] ]
+    window = sg.Window('Buscar paquetes de viaje', layout)
+    event, values = window.read()
+    window.close()
     mes = {
         'enero':'1',
         'febrero':'2',
@@ -64,19 +53,18 @@ def parametros():
             values[2] = mes[i]
         elif values[4].lower() == i:
             values[4] = mes[i]
-    if valuesh:
-        print("Y")
-    else:
-        n = 0
-        habs = []
-        while n <= int(values[6]) - 1:
-            habs.append([sg.Text('#Adultos(1-6)'), sg.InputText(size= (2, )), sg.Text('#Menores(0-6)'), sg.InputText(size= (2, ), key = f"m{n}")])
-            n += 1
 
-        por_hab = [[sg.Text('Recuerda: El número máximo de pasajeros es: 6')], habs, [sg.Button('Ok'), sg.Button('Cancel')]]
-        windowh = sg.Window('Buscar paquetes de viaje', por_hab)
-        eventh, valuesh = windowh.read()
-        windowh.close()
+    n = 0
+    habs = []
+    while n <= int(values[6]) - 1:
+        habs.append([sg.Text('#Adultos(1-6)'), sg.InputText(size= (2, )), sg.Text('#Menores(0-6)'), sg.InputText(size= (2, ), key = f"m{n}")])
+        n += 1
+
+    por_hab = [[sg.Text('Recuerda: El número máximo de pasajeros es: 6')], habs, [sg.Button('Ok'), sg.Button('Cancel')]]
+    windowh = sg.Window('Buscar paquetes de viaje', por_hab)
+    eventh, valuesh = windowh.read()
+    print(valuesh)
+    windowh.close()
     n = 0
     hab = {}
     while n <= len(valuesh):
@@ -150,10 +138,7 @@ def buscar_res(driver1):
     for i in allwindo:
         if i != allwindo[0]:
             driver1.switch_to.window(i)
-            try:
-                WebDriverWait(driver1, 120).until(EC.element_to_be_clickable((By.XPATH, "//strong[contains(text(),'Reservar')]")))
-            except:
-                 return habi == 'No hay habitaciones disponibles';
+            WebDriverWait(driver1, 120).until(EC.element_to_be_clickable((By.XPATH, "//strong[contains(text(),'Reservar')]")))
             opage = driver1.page_source
             soup = BeautifulSoup(opage, 'lxml')
             habi = soup.find(class_='room-title')
@@ -163,31 +148,26 @@ def buscar_res(driver1):
                 driver1.switch_to.window(i)
     return precios, hoteles, habitacion
 
-def post_database(collection_name, precios, hoteles, habitacion):
-    hora = datetime.today().strftime('%Y-%m-%d  %H:%M:%S')
-    resultados = {
-        "Fecha del viaje": f'{values[3]}/{values[2]}/{anio}',
-        "Ciudad": f'{values[0]}',
-        "Destino": f'{values[1]}',
-        "Precios": precios,
-        "Hotel": hoteles,
-        "Tipo de acomodacion": habitacion,
-        "hora de solicitud": hora
-        }
-    collection_name.insert_one(resultados)
+def guardar_res(precios, hoteles, habitacion):
+    sg.popup_no_wait('Guardando...', non_blocking = True, auto_close = True, button_type = 5)
+    Lista = pd.DataFrame({
+    "Ciudad": f'{values[0]}',
+    "Destino": f'{values[1]}',
+    "Precios": precios,
+    "Hotel": hoteles,
+    "Tipo de acomodacion": habitacion
+    })
+    Lista.columns = pd.MultiIndex.from_product([[f"Vuelos del {values[3]}/{values[2]} al {values[5]}/{values[4]}"], Lista.columns])
+    resultado = Lista.to_csv('ListaVuelos.csv', index=False)
+    return resultado
 
 
 if __name__ == '__main__':
-    try:
-        api()
-        apis()
-    else:
-        dbname = get_database()
-        driver = pag_base()
-        values, valuesh, valuesm, hab = parametros()
-        driver1 = buscar(driver, values, valuesh, valuesm, hab)
-        precios, hoteles, habitacion = buscar_res(driver1)
-        collection_name = dbname["paquetes"]
-        post_database(collection_name, precios, hoteles, habitacion)
-        sg.popup('Se han guardado los resultados')
-        driver.quit()
+    dbname = get_database()
+    driver = pag_base()
+    values, valuesh, valuesm, hab = parametros()
+    driver1 = buscar(driver, values, valuesh, valuesm, hab)
+    precios, hoteles, habitacion = buscar_res(driver1)
+    resultado = guardar_res(precios, hoteles, habitacion)
+    sg.popup('Se han guardado los resultados')
+    driver.quit()
