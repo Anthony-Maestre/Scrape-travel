@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "AutoWS", "AutoWS\AutoWS.pyproj", "{21EDF5DB-CD0E-4072-81F3-753BC25D82E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21EDF5DB-CD0E-4072-81F3-753BC25D82E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21EDF5DB-CD0E-4072-81F3-753BC25D82E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FDB70905-9867-4F6C-813B-CAF9B07910C2}
+	EndGlobalSection
+EndGlobal
